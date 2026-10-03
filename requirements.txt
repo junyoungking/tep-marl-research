@@ -1,0 +1,8 @@
+# Versions used for the source and import checks on Python 3.10.19.
+# The validated PyTorch build was 2.10.0+cpu; install a CPU build when reproducing that environment.
+# Install the external tep simulator separately at the commit documented in README.md.
+numpy==2.2.6
+torch==2.10.0
+gymnasium==1.2.3
+torch-geometric==2.7.0
+tensorboard==2.20.0
