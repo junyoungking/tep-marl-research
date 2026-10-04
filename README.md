@@ -1,6 +1,12 @@
-# Privacy-Aware Multi-Agent Reinforcement Learning on the Tennessee Eastman Process
+# Split Multi-Agent Reinforcement Learning on the Tennessee Eastman Process
 
 I studied cooperative control of the Tennessee Eastman Process (TEP) with three agents that observe different parts of the plant. This portfolio contains a split PPO architecture with bottleneck information (BI), selective federated averaging, privacy regularization, matched reinforcement-learning baselines, and diagnostics of what happens when the *value path* receives global information. It is a focused code and evidence selection from a larger research project; the historical checkpoints and operations system are outside this repository.
+
+### My Contributions
+
+- Implemented the split PPO actor/critic architecture, BI/GAT value path, selective FedAvg, and privacy regularization components.
+- Built architecture-matched IPPO, MAPPO/HAPPO, and fully centralized PPO baselines for controlled comparison.
+- Designed F/M/G diagnostics to test how access to global information in the BI/value path changes learning behavior while keeping action-time policies local.
 
 ## 1. Research Question
 
@@ -28,10 +34,12 @@ The project's reward uses a *profit proxy*, not an audited monetary profit: `pro
 
 ```text
 local observation (7 / 10 / 8) ──→ local actor ──→ one local action per agent
-                 │
-                 └─→ local observation + previous local action
-                       └─→ local BI encoder / GRU ──→ optional bottleneck ──→ three-node GAT
-                                                        └─→ server value estimates
+              │
+              └─→ local observation + previous local action
+                    └─→ local BI encoder / GRU
+                          └─→ optional bottleneck
+                                └─→ three-node GAT
+                                      └─→ server value estimates
 ```
 
 I implemented the [local actor](models/fl_split_actor.py), [BI encoder and GAT value model](models/fl_split_critic.py), [optional bottleneck](models/fl_split_bottleneck.py), [PPO trainer](trainers/fl_split_ppo_trainer.py), and [parameter averaging](utils/fedavg.py). The bottleneck module is present in the architecture but is enabled only when configured. PPO computes advantages with GAE, updates actors with a clipped policy ratio and entropy term, and trains the server value estimates against returns.
@@ -58,6 +66,8 @@ The following values come directly from [`final_utility_method_aggregate.csv`](r
 | IPPO | −139.92 ± 0.66 | 129.34 | 100% | 71.51 |
 
 These aggregate results show a utility difference under that evaluation contract. **Every method also has a 100% episode shutdown fraction in this CSV**, so the table does not show sustained safe operation.
+
+I therefore treat this comparison as a **utility diagnostic under a common evaluation contract**, not as evidence of successful process control.
 
 ## 6. GlobalBI F / M / G Diagnostic
 
@@ -89,6 +99,25 @@ The final held-out table below uses the actual values in [`heldout_summary_with_
 
 ## 8. Value-Path Diagnostic
 
-[`g2_central_scalar_ablation.py`](trainers/g2_central_scalar_ablation.py) is a **reference implementation** for an exploratory comparison that retains the three local actors while replacing the G BI/GAT three-value path with a centralized recurrent scalar-value path. The comparison changes how value targets and advantages are formed; it is not a Fully Centralized Actor baseline. The historical G2 worker, queue, checkpoints, and raw results are not part of this portfolio, so this file alone is not a runnable G2 experiment.
+[`g2_central_scalar_ablation.py`](trainers/g2_central_scalar_ablation.py) is a **reference implementation** for an exploratory comparison that retains the three local actors while replacing the G BI/GAT three-value path with a centralized recurrent scalar-value path. The comparison changes how value targets and advantages are formed; it is not a Fully Centralized Actor baseline.
 
-For a file-by-file entry point guide, dependency setup, and the boundary between inspectable code and historical-run reproduction, see [Reproducibility notes](docs/REPRODUCIBILITY.md).
+The historical G2 worker, queue, checkpoints, and raw results are not part of this portfolio, so this file alone is not a runnable G2 experiment.
+
+## 9. Repository Map
+
+| Component | Main file |
+|---|---|
+| TEP environment wrapper | [`envs/env.py`](envs/env.py) |
+| Reward / cost | [`envs/reward.py`](envs/reward.py), [`envs/cost.py`](envs/cost.py) |
+| Local actor | [`models/fl_split_actor.py`](models/fl_split_actor.py) |
+| BI / GAT value model | [`models/fl_split_critic.py`](models/fl_split_critic.py) |
+| Privacy regularization | [`models/bi_privacy_defense.py`](models/bi_privacy_defense.py) |
+| PPO + FedAvg | [`trainers/fl_split_ppo_trainer.py`](trainers/fl_split_ppo_trainer.py) |
+| GlobalBI F/M/G | [`trainers/fl_split_ppo_trainer_globalbi_phase4.py`](trainers/fl_split_ppo_trainer_globalbi_phase4.py) |
+| IPPO | [`trainers/ippo_ppo_trainer.py`](trainers/ippo_ppo_trainer.py) |
+| MAPPO / HAPPO | [`trainers/noshare_mappo_happo_trainer.py`](trainers/noshare_mappo_happo_trainer.py) |
+| Fully Centralized PPO | [`trainers/fully_centralized_ppo_trainer.py`](trainers/fully_centralized_ppo_trainer.py) |
+| Value-path diagnostic | [`trainers/g2_central_scalar_ablation.py`](trainers/g2_central_scalar_ablation.py) |
+
+For environment setup, dependency provenance, and the boundary between inspectable code and historical-run reproduction, see [Reproducibility notes](docs/REPRODUCIBILITY.md).
+
