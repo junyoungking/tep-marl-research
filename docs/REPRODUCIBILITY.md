@@ -35,4 +35,4 @@ These commands are setup/import guidance. They are not a claim that the historic
 
 Historical GlobalBI extension runs used initial bundles, exact-resume checkpoints, a source fingerprint, and an operations journal. They are deliberately absent. The copied `scripts/train_a0_globalbi_phase4.py` still fingerprints backend files in a sibling `tennessee-eastman-process` checkout when its historical run path is invoked. Keeping that guard unmodified preserves the original scientific code but means that importing these modules and replaying the historical extension are different levels of reproducibility. No source code beyond `envs/env.py` was changed for this portfolio.
 
-No `LICENSE` file has been added pending a publication-rights decision for the research code. Check the simulator's own `LICENSE` and copyright notices before publishing this repository.
+This repository does not include a `LICENSE` file. The external TEP simulator retains its original license and copyright notices in the upstream repository.
